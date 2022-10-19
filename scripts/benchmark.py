@@ -4,6 +4,7 @@ import subprocess
 from concurrent.futures import ThreadPoolExecutor
 import time
 import json
+import atexit
 
 import pulsar
 
@@ -28,6 +29,20 @@ cluster = args.cluster
 workers = args.workers
 partitions = args.partitions
 
+end_condition = multiprocessing.Event()
+
+# before exit, delete the k8s resource and cp file from the pod
+def exit_handler():
+    end_condition.set()
+    # stop the pipeline after 5 minutes.
+    cmd_get_task_manager_log = "kubectl cp flink-benchmark-taskmanager-1-1:/opt/flink/log/ ./logs/"
+    subprocess.run(cmd_get_task_manager_log, shell=True, check=True)
+
+    cmd_stop_flink_job = "kubectl delete -f  ../k8s-configs/benchmark-table-job.yaml"
+    subprocess.run(cmd_stop_flink_job, shell=True, check=True)
+
+atexit.register(exit_handler)
+
 # create pulsar resources
 setup_commands = [
     "pulsarctl context set benchmark --admin-service-url=\"{}\"".format(admin_url),
@@ -51,25 +66,28 @@ image_build_commands = [
 for cmd in image_build_commands:
     subprocess.run(cmd, shell=True, check=True)
 
-# feed data into the topic
-end_condition = multiprocessing.Event()
-
-
-def send_str_messages(pulsar_client: pulsar.Client):
-    producer = pulsar_client.create_producer(topic="sample/flink-benchmark/string-topic",
-                                             schema=pulsar.schema.StringSchema)
-    while not end_condition.is_set():
-        producer.send_async("Simple String")
-
-
-# with ThreadPoolExecutor(max_workers=workers) as executor:
-#     client = pulsar.Client(service_url)
-#     for i in range(workers):
-#         executor.submit(send_str_messages, client)
 
 #start flink job
-cmd_start_flink_job = "kubectl apply -f ../k8s-configs/json-table-job.yaml"
+cmd_start_flink_job = "kubectl apply -f ../k8s-configs/benchmark-table-job.yaml"
 subprocess.run(cmd_start_flink_job, shell=True, check=True)
+
+# wait for the pod up and running
+
+# feed data into the topic
+
+def send_str_messages(pulsar_client: pulsar.Client):
+    producers = []
+    for i in range(partitions):
+        producers[i] =  pulsar_client.create_producer(topic="sample/flink-benchmark/string-topic-partition-{}".format(i),
+                                             schema=pulsar.schema.StringSchema)
+    while not end_condition.is_set():
+        for i in range(partitions):
+            producers[i].send_async("Simple String")
+
+with ThreadPoolExecutor(max_workers=workers) as executor:
+    client = pulsar.Client(service_url)
+    for i in range(workers):
+        executor.submit(send_str_messages, client)
 
 
 # observing the output: use the data from pulsar, we need to refresh the interval
@@ -93,13 +111,9 @@ for i in range(30):
         # print(bytes_rates_in)
         # print(bytes_rates_out)
     print("Iteration {0: <2}, {1: <20} , {2: <20} , {3: <20} , {4: <20}".format(i, msg_rates_in, msg_rates_out, bytes_rates_in, bytes_rates_out))
-    time.sleep(10)
+    time.sleep(30)
 
 
-end_condition.set()
-## stop the pipeline after 5 minutes.
-# cmd_get_task_manager_log = "kubectl delete -f  ../k8s-configs/json-table-job.yaml"
-# subprocess.run(cmd_get_task_manager_log, shell=True, check=True)
-#
-# cmd_stop_flink_job = "kubectl delete -f  ../k8s-configs/json-table-job.yaml"
-# subprocess.run(cmd_stop_flink_job, shell=True, check=True)
+
+
+
