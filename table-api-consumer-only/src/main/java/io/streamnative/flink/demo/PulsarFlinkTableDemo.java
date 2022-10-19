@@ -61,9 +61,22 @@ public class PulsarFlinkTableDemo {
                 .option(PulsarTableOptions.SOURCE_START_FROM_MESSAGE_ID, "earliest")
                 .option(PulsarTableOptions.ADMIN_URL, "http://20.81.113.183:80")
                 .option(PulsarTableOptions.SERVICE_URL, "pulsar://20.81.113.183:6650")
-                .option(PulsarTableOptions.TOPICS, Collections.singletonList("persistent://sample/flink-benchmark/user-topic"))
+                .option(PulsarTableOptions.TOPICS, Collections.singletonList("persistent://sample/flink-benchmark/json-topic"))
             .build());
 
-        tEnv.executeSql("SELECT * FROM MyUsers");
+        tEnv.createTable("MyStrings", TableDescriptor
+                .forConnector("pulsar")
+                .schema(Schema.newBuilder()
+                        .column("value", DataTypes.STRING())
+                        .build())
+                .format("raw")
+                .option(PulsarTableOptions.SOURCE_START_FROM_MESSAGE_ID, "earliest")
+                .option(PulsarTableOptions.ADMIN_URL, "http://20.81.113.183:80")
+                .option(PulsarTableOptions.SERVICE_URL, "pulsar://20.81.113.183:6650")
+                .option(PulsarTableOptions.TOPICS, Collections.singletonList("persistent://sample/flink-benchmark/string-topic"))
+                .build());
+
+
+        tEnv.executeSql("SELECT * FROM MyStrings");
 	}
 }

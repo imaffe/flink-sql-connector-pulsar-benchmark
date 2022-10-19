@@ -5,6 +5,7 @@ import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
+import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.impl.schema.JSONSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,7 @@ import static com.example.affe.data.ExampleUser.createRandomUserWithCreateTime;
 public class BenchmarkProducer {
     private static final Logger logger
             = LoggerFactory.getLogger(BenchmarkProducer.class);
-    private static final String USER_COMPLETE_TOPIC_PATH = "sample/flink-benchmark/user-topic";
+    private static final String USER_COMPLETE_TOPIC_PATH = "sample/flink-benchmark/string-topic";
 
     private static final int NUM_MESSAGES = 10000000;
 
@@ -35,7 +36,7 @@ public class BenchmarkProducer {
                 .build();
 
         // designate an AVRO schema
-        Producer<ExampleUser> producer = client.newProducer(JSONSchema.of(ExampleUser.class))
+        Producer<String> producer = client.newProducer(Schema.STRING)
                 .topic(USER_COMPLETE_TOPIC_PATH)
                 .enableBatching(true)
                 .create();
@@ -52,10 +53,10 @@ public class BenchmarkProducer {
         while(true) {
             LocalDateTime currentDateTime = LocalDateTime.now();
             long epochMillis = currentDateTime.toInstant(ZoneOffset.UTC).toEpochMilli();
-            ExampleUser user = createRandomUserWithCreateTime(epochMillis);
+            // ExampleUser user = createRandomUserWithCreateTime(epochMillis);
             producer.newMessage()
                     .eventTime(epochMillis)
-                    .value(user)
+                    .value("Simple String")
                     .sendAsync();
         }
     }
