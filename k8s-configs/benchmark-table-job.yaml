@@ -20,6 +20,18 @@ spec:
             containers:
                 # Do not change the main container name
                 - name: flink-main-container
+                  volumeMounts:
+                      - mountPath: /opt/flink/examples
+                        name: benchmark-config
+                        readOnly: true
+            volumes:
+                - name: benchmark-config
+                  configMap:
+                      name: benchmark-config
+                      items:
+                      - key: "benchmark.properties"
+                        path: "benchmark.properties"
+
     jobManager:
         resource:
             memory: "2048m"

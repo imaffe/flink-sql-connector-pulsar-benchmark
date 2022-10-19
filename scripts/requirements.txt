@@ -1,0 +1,4 @@
+certifi==2022.9.24
+lxml==4.9.0
+pulsar-client==2.10.0
+six==1.16.0

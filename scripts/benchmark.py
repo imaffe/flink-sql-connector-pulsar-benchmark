@@ -36,10 +36,10 @@ def exit_handler():
     end_condition.set()
     # stop the pipeline after 5 minutes.
     cmd_get_task_manager_log = "kubectl cp flink-benchmark-taskmanager-1-1:/opt/flink/log/ ./logs/"
-    subprocess.run(cmd_get_task_manager_log, shell=True, check=True)
+    subprocess.run(cmd_get_task_manager_log, shell=True)
 
     cmd_stop_flink_job = "kubectl delete -f  ../k8s-configs/benchmark-table-job.yaml"
-    subprocess.run(cmd_stop_flink_job, shell=True, check=True)
+    subprocess.run(cmd_stop_flink_job, shell=True)
 
 atexit.register(exit_handler)
 
@@ -58,7 +58,7 @@ for cmd in setup_commands:
     subprocess.run(cmd, shell=True)
 
 image_build_commands = [
-    "cd ../table-api-consumer-only && mvn clean package",
+    "cd ../flink-sql-connector-pulsar-demo && mvn clean package",
     "cd .. && docker build . -t affe/pulsar-flink-benchmark-demo:latest",
     "cd .. && docker push affe/pulsar-flink-benchmark-demo:latest",
 ]
@@ -66,12 +66,15 @@ image_build_commands = [
 for cmd in image_build_commands:
     subprocess.run(cmd, shell=True, check=True)
 
-
 #start flink job
+cmd_apply_config = "kubectl apply -f ../k8s-configs/benchmark-config.yaml"
+subprocess.run(cmd_apply_config, shell=True, check=True)
 cmd_start_flink_job = "kubectl apply -f ../k8s-configs/benchmark-table-job.yaml"
 subprocess.run(cmd_start_flink_job, shell=True, check=True)
 
 # wait for the pod up and running
+cmd_wait_for_pod = "kubectl wait pods -n flink-sql -l run=mynginx --for condition=Ready --timeout=90s"
+
 
 # feed data into the topic
 
@@ -84,10 +87,10 @@ def send_str_messages(pulsar_client: pulsar.Client):
         for i in range(partitions):
             producers[i].send_async("Simple String")
 
-with ThreadPoolExecutor(max_workers=workers) as executor:
-    client = pulsar.Client(service_url)
-    for i in range(workers):
-        executor.submit(send_str_messages, client)
+# with ThreadPoolExecutor(max_workers=workers) as executor:
+#     client = pulsar.Client(service_url)
+#     for i in range(workers):
+#         executor.submit(send_str_messages, client)
 
 
 # observing the output: use the data from pulsar, we need to refresh the interval
@@ -106,10 +109,6 @@ for i in range(30):
         msg_rates_out += float(stats_json["msgRateOut"])
         bytes_rates_in += float(stats_json["msgThroughputIn"])
         bytes_rates_out += float(stats_json["msgThroughputOut"])
-        # print(msg_rates_in)
-        # print(msg_rates_out)
-        # print(bytes_rates_in)
-        # print(bytes_rates_out)
     print("Iteration {0: <2}, {1: <20} , {2: <20} , {3: <20} , {4: <20}".format(i, msg_rates_in, msg_rates_out, bytes_rates_in, bytes_rates_out))
     time.sleep(30)
 

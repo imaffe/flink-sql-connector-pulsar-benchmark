@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: benchmark-config
+data:
+    benchmark.properties: |
+        test.type=table
+        test.schema=string
+        test.semantic=exactly-one
+        test.parallelism=4
+        test.partitions=4
+        test.subscription-mode=Exclusive

@@ -28,6 +28,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Properties;
 
 import static io.streamnative.flink.demo.PulsarFlinkTableConfigs.*;
@@ -47,7 +48,7 @@ import static io.streamnative.flink.demo.PulsarFlinkTableConfigs.*;
  */
 public class PulsarFlinkTableDemo {
 
-    private static final String CONFIG_FILE_PATH = "/opt/flink/config/benchmark.config";
+    private static final String CONFIG_FILE_PATH = "/opt/flink/examples/benchmark.properties";
 
     private static Properties properties;
 
@@ -89,7 +90,7 @@ public class PulsarFlinkTableDemo {
 
     // DataStream tests
     private static void runDataStreamJob(Properties properties) {
-       if (properties.getProperty(CONFIG_SCHEMA) == SCHEMA_STRING) {
+       if (Objects.equals(properties.getProperty(CONFIG_SCHEMA), SCHEMA_STRING)) {
            runSimpleStringDataStreamJob(properties);
        } else {
            runStructDataStreamJob(properties);
@@ -106,8 +107,8 @@ public class PulsarFlinkTableDemo {
 
 
     // Table tests
-    private static void runTableJob(Properties properties) {
-        if (properties.getProperty(CONFIG_SCHEMA) == SCHEMA_STRING) {
+    private static void runTableJob(Properties properties) throws OperationNotSupportedException {
+        if (Objects.equals(properties.getProperty(CONFIG_SCHEMA), SCHEMA_STRING)) {
             runSimpleStringTableJob(properties);
         } else {
             runStructTableJob(properties);
@@ -128,12 +129,27 @@ public class PulsarFlinkTableDemo {
                 .option(PulsarTableOptions.SERVICE_URL, "pulsar://20.81.113.183:6650")
                 .option(PulsarTableOptions.TOPICS, Collections.singletonList("persistent://sample/flink-benchmark/string-topic"))
                 .build());
-        tEnv.executeSql("SELECT * FROM MyStrings");
+
+        tEnv.createTable("BlackHole", TableDescriptor.forConnector("blackhole").schema(
+                Schema.newBuilder()
+                        .column("value", DataTypes.STRING())
+                        .build())
+                .build());
+        tEnv.executeSql("INSERT INTO BlackHole SELECT * FROM MyStrings");
     }
 
-    private static void runStructTableJob(Properties properties) {
+    private static void runStructTableJob(Properties properties) throws OperationNotSupportedException {
         EnvironmentSettings settings = EnvironmentSettings.newInstance().inStreamingMode().build();
         TableEnvironment tEnv = TableEnvironment.create(settings);
+
+        String format;
+        if (Objects.equals(properties.getProperty(CONFIG_SCHEMA), SCHEMA_JSON)) {
+            format = "json";
+        } else if (Objects.equals(properties.getProperty(CONFIG_SCHEMA), SCHEMA_AVRO)) {
+            format = "avro";
+        } else {
+            throw new OperationNotSupportedException("Only support json and avro struct schema");
+        }
         tEnv.createTable("MyUsers", TableDescriptor.
                 forConnector("pulsar").
                 schema(Schema.newBuilder()
@@ -145,12 +161,25 @@ public class PulsarFlinkTableDemo {
                         .columnByExpression("row_time", "cast(TO_TIMESTAMP(FROM_UNIXTIME(createTime / 1000), 'yyyy-MM-dd HH:mm:ss') as timestamp(3))")
                         .watermark("row_time", "row_time - INTERVAL '5' SECOND")
                         .build())
-                .format("raw")
+                .format(format)
                 .option(PulsarTableOptions.SOURCE_START_FROM_MESSAGE_ID, "earliest")
                 .option(PulsarTableOptions.ADMIN_URL, "http://20.81.113.183:80")
                 .option(PulsarTableOptions.SERVICE_URL, "pulsar://20.81.113.183:6650")
                 .option(PulsarTableOptions.TOPICS, Collections.singletonList("persistent://sample/flink-benchmark/json-topic"))
                 .build());
+
+        tEnv.createTable("BlackHole", TableDescriptor.forConnector("blackhole").schema(
+                        Schema.newBuilder()
+                                .column("name", DataTypes.STRING())
+                                .column("age", DataTypes.INT())
+                                .column("single", DataTypes.BOOLEAN())
+                                .column("income", DataTypes.DOUBLE())
+                                .column("createTime", DataTypes.BIGINT())
+                                .column("row_time", DataTypes.TIMESTAMP(3))
+                                .build())
+                .build());
+
+        tEnv.executeSql("INSERT INTO BlackHole SELECT * FROM MyUsers");
     }
 }
 
