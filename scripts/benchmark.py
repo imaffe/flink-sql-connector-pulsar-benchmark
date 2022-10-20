@@ -28,6 +28,7 @@ service_url = args.service_url
 cluster = args.cluster
 workers = args.workers
 partitions = args.partitions
+topic = "json-topic"
 
 end_condition = multiprocessing.Event()
 
@@ -73,19 +74,19 @@ cmd_start_flink_job = "kubectl apply -f ../k8s-configs/benchmark-table-job.yaml"
 subprocess.run(cmd_start_flink_job, shell=True, check=True)
 
 # wait for the pod up and running
-cmd_wait_for_pod = "kubectl wait pods -n flink-sql -l run=mynginx --for condition=Ready --timeout=90s"
-
+# cmd_wait_for_pod = "kubectl wait pods -n flink-sql -l run=mynginx --for condition=Ready --timeout=90s"
+#
 
 # feed data into the topic
 
-def send_str_messages(pulsar_client: pulsar.Client):
-    producers = []
-    for i in range(partitions):
-        producers[i] =  pulsar_client.create_producer(topic="sample/flink-benchmark/string-topic-partition-{}".format(i),
-                                             schema=pulsar.schema.StringSchema)
-    while not end_condition.is_set():
-        for i in range(partitions):
-            producers[i].send_async("Simple String")
+# def send_str_messages(pulsar_client: pulsar.Client):
+#     producers = []
+#     for i in range(partitions):
+#         producers[i] =  pulsar_client.create_producer(topic="sample/flink-benchmark/string-topic-partition-{}".format(i),
+#                                              schema=pulsar.schema.StringSchema)
+#     while not end_condition.is_set():
+#         for i in range(partitions):
+#             producers[i].send_async("Simple String")
 
 # with ThreadPoolExecutor(max_workers=workers) as executor:
 #     client = pulsar.Client(service_url)
@@ -97,7 +98,7 @@ def send_str_messages(pulsar_client: pulsar.Client):
 for i in range(30):
     msg_rates_in, msg_rates_out, bytes_rates_in, bytes_rates_out = 0.0, 0.0, 0.0, 0.0
     for j in range(partitions):
-        cmd_observe_metrics = "pulsarctl topics stats {}-partition-{}".format("sample/flink-benchmark/string-topic", j)
+        cmd_observe_metrics = "pulsarctl topics stats sample/flink-benchmark/{}-partition-{}".format(topic, j)
         result = subprocess.run(cmd_observe_metrics, shell=True, capture_output=True, text=True)
         # print("The command  is : {}".format(cmd_observe_metrics))
         if result.stdout.startswith("["):

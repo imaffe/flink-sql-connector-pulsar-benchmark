@@ -47,31 +47,31 @@ import static io.streamnative.flink.demo.PulsarFlinkTableConfigs.*;
  * method, change the respective entry in the POM.xml file (simply search for 'mainClass').
  */
 public class PulsarFlinkTableDemo {
-
     private static final String CONFIG_FILE_PATH = "/opt/flink/examples/benchmark.properties";
 
     private static Properties properties;
 
 	public static void main(String[] args) throws Exception {
-
-        EnvironmentSettings settings = EnvironmentSettings
-            .newInstance()
-            .inStreamingMode()
-            .build();
-        TableEnvironment tEnv = TableEnvironment.create(settings);
-
-        File configFile = new File(CONFIG_FILE_PATH);
-        try {
-            FileReader reader = new FileReader(configFile);
-            properties = new Properties();
-            properties.load(reader);
-            reader.close();
-        } catch (FileNotFoundException ex) {
-            // file does not exist
-        } catch (IOException ex) {
-            // I/O error
-        }
-        runJobBasedOnConfig(properties);
+//
+//        File configFile = new File(CONFIG_FILE_PATH);
+//        try {
+//            FileReader reader = new FileReader(configFile);
+//            properties = new Properties();
+//            properties.load(reader);
+//            reader.close();
+//        } catch (FileNotFoundException ex) {
+//            // file does not exist
+//            properties = new Properties();
+//            properties.setProperty(CONFIG_TYPE, TYPE_TABLE);
+//            properties.setProperty(CONFIG_SCHEMA, SCHEMA_STRING);
+//        } catch (IOException ex) {
+//            // I/O error
+//            properties = new Properties();
+//            properties.setProperty(CONFIG_TYPE, TYPE_TABLE);
+//            properties.setProperty(CONFIG_SCHEMA, SCHEMA_STRING);
+//        }
+//        runJobBasedOnConfig(properties);
+        runStructTableJob(new Properties());
 	}
 
 
@@ -142,14 +142,14 @@ public class PulsarFlinkTableDemo {
         EnvironmentSettings settings = EnvironmentSettings.newInstance().inStreamingMode().build();
         TableEnvironment tEnv = TableEnvironment.create(settings);
 
-        String format;
-        if (Objects.equals(properties.getProperty(CONFIG_SCHEMA), SCHEMA_JSON)) {
-            format = "json";
-        } else if (Objects.equals(properties.getProperty(CONFIG_SCHEMA), SCHEMA_AVRO)) {
-            format = "avro";
-        } else {
-            throw new OperationNotSupportedException("Only support json and avro struct schema");
-        }
+        String format = "json";
+//        if (Objects.equals(properties.getProperty(CONFIG_SCHEMA), SCHEMA_JSON)) {
+//            format = "json";
+//        } else if (Objects.equals(properties.getProperty(CONFIG_SCHEMA), SCHEMA_AVRO)) {
+//            format = "avro";
+//        } else {
+//            throw new OperationNotSupportedException("Only support json and avro struct schema");
+//        }
         tEnv.createTable("MyUsers", TableDescriptor.
                 forConnector("pulsar").
                 schema(Schema.newBuilder()
