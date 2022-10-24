@@ -39,7 +39,7 @@ spec:
             cpu: 1
     taskManager:
         resource:
-            memory: "2048m"
+            memory: "8192m"
             cpu: 2
     job:
         jarURI: local:///opt/flink/examples/flink-sql-connector-pulsar-demo-1.0-SNAPSHOT.jar

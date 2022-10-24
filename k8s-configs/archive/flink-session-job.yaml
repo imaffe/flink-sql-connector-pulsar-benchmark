@@ -6,6 +6,6 @@ metadata:
 spec:
   deploymentName: benchmark-flink-session-cluster
   job:
-    jarURI: file:///opt/flink/plugins/benchmark/flink-sql-connector-pulsar-demo-1.0-SNAPSHOT.jar
+    jarURI: file:///opt/flink/examples/flink-sql-connector-pulsar-demo-1.0-SNAPSHOT.jar
     parallelism: 2
     upgradeMode: stateless

@@ -83,8 +83,9 @@ cmd_start_flink_job = "kubectl apply -f ../k8s-configs/benchmark-table-job.yaml"
 subprocess.run(cmd_start_flink_job, shell=True, check=True)
 
 # wait for the pod up and running
-# cmd_wait_for_pod = "kubectl wait pods -n flink-sql -l run=mynginx --for condition=Ready --timeout=90s"
-#
+# cmd_wait_for_pod = "kubectl wait pods -n flink-sql -l component=taskmanager --for condition=Ready --timeout=90s"
+# subprocess.run(cmd_wait_for_pod, shell=True, check=True)
+# trigger the run using script
 
 # feed data into the topic
 

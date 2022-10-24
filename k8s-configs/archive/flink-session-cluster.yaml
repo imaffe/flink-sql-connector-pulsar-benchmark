@@ -21,7 +21,7 @@ spec:
                 # Do not change the main container name
                 - name: flink-main-container
                   volumeMounts:
-                      - mountPath: /opt/flink/plugins/benchmark/config
+                      - mountPath: /opt/flink/examples/config
                         name: benchmark-config
                         readOnly: true
             volumes:

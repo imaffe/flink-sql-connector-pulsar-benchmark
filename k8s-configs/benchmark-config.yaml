@@ -4,9 +4,9 @@ metadata:
     name: benchmark-config
 data:
     benchmark.properties: |
-        test.type=table
-        test.schema=string
+        test.type=datastream
+        test.schema=json
         test.semantic=exactly-one
         test.parallelism=2
         test.partitions=4
-        test.subscription-mode=Exclusive
+        test.subscription-mode=lExclusive
