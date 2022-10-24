@@ -47,31 +47,31 @@ import static io.streamnative.flink.demo.PulsarFlinkTableConfigs.*;
  * method, change the respective entry in the POM.xml file (simply search for 'mainClass').
  */
 public class PulsarFlinkTableDemo {
-    private static final String CONFIG_FILE_PATH = "/opt/flink/examples/benchmark.properties";
-
+//    private static final String CONFIG_FILE_PATH = "/opt/flink/plugins/benchmark/config/benchmark.properties";
+    private static final String CONFIG_FILE_PATH = "/opt/flink/examples/config/benchmark.properties";
     private static Properties properties;
 
 	public static void main(String[] args) throws Exception {
-//
-//        File configFile = new File(CONFIG_FILE_PATH);
-//        try {
-//            FileReader reader = new FileReader(configFile);
-//            properties = new Properties();
-//            properties.load(reader);
-//            reader.close();
-//        } catch (FileNotFoundException ex) {
-//            // file does not exist
-//            properties = new Properties();
-//            properties.setProperty(CONFIG_TYPE, TYPE_TABLE);
-//            properties.setProperty(CONFIG_SCHEMA, SCHEMA_STRING);
-//        } catch (IOException ex) {
-//            // I/O error
-//            properties = new Properties();
-//            properties.setProperty(CONFIG_TYPE, TYPE_TABLE);
-//            properties.setProperty(CONFIG_SCHEMA, SCHEMA_STRING);
-//        }
-//        runJobBasedOnConfig(properties);
-        runStructTableJob(new Properties());
+
+        File configFile = new File(CONFIG_FILE_PATH);
+        try {
+            FileReader reader = new FileReader(configFile);
+            properties = new Properties();
+            properties.load(reader);
+            reader.close();
+        } catch (FileNotFoundException ex) {
+            // file does not exist
+            properties = new Properties();
+            properties.setProperty(CONFIG_TYPE, TYPE_TABLE);
+            properties.setProperty(CONFIG_SCHEMA, SCHEMA_STRING);
+        } catch (IOException ex) {
+            // I/O error
+            properties = new Properties();
+            properties.setProperty(CONFIG_TYPE, TYPE_TABLE);
+            properties.setProperty(CONFIG_SCHEMA, SCHEMA_STRING);
+        }
+        runJobBasedOnConfig(properties);
+//        runStructTableJob(new Properties());
 	}
 
 

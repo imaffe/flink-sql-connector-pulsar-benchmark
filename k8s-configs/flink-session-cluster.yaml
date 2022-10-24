@@ -2,9 +2,10 @@ apiVersion: flink.apache.org/v1beta1
 kind: FlinkDeployment
 metadata:
     namespace: flink-sql
-    name: demo-flink
+    name: benchmark-flink-session-cluster
 spec:
-    image: streamnative/pulsar-flink:1.15.1.2
+    image: affe/pulsar-flink-benchmark-demo:latest
+    imagePullPolicy: Always
     flinkVersion: v1_15
     flinkConfiguration:
         taskmanager.numberOfTaskSlots: "2"
@@ -20,12 +21,17 @@ spec:
                 # Do not change the main container name
                 - name: flink-main-container
                   volumeMounts:
-                      - mountPath: /opt/streamnative/auth
-                        name: auth
+                      - mountPath: /opt/flink/plugins/benchmark/config
+                        name: benchmark-config
+                        readOnly: true
             volumes:
-                - name: auth
-                  secret:
-                    secretName: test-secret1
+                - name: benchmark-config
+                  configMap:
+                      optional: true
+                      name: benchmark-config
+                      items:
+                      - key: "benchmark.properties"
+                        path: "benchmark.properties"
     jobManager:
         resource:
             memory: "2048m"
@@ -34,14 +40,4 @@ spec:
         resource:
             memory: "2048m"
             cpu: 1
-        podTemplate:
-            apiVersion: v1
-            kind: Pod
-            metadata:
-                name: task-manager-pod-template
-            spec:
-                initContainers:
-                    # Sample sidecar container
-                    - name: busybox
-                      image: busybox:latest
-                      command: [ 'sh','-c','echo hello from task manager' ]
+

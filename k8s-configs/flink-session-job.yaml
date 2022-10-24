@@ -1,0 +1,11 @@
+apiVersion: flink.apache.org/v1beta1
+kind: FlinkSessionJob
+metadata:
+  name: benchmark-session-job
+  namespace: flink-sql
+spec:
+  deploymentName: benchmark-flink-session-cluster
+  job:
+    jarURI: file:///opt/flink/plugins/benchmark/flink-sql-connector-pulsar-demo-1.0-SNAPSHOT.jar
+    parallelism: 2
+    upgradeMode: stateless

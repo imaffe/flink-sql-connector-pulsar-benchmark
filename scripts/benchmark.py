@@ -36,9 +36,13 @@ end_condition = multiprocessing.Event()
 def exit_handler():
     end_condition.set()
     # stop the pipeline after 5 minutes.
-    cmd_get_task_manager_log = "kubectl cp flink-benchmark-taskmanager-1-1:/opt/flink/log/ ./logs/"
-    subprocess.run(cmd_get_task_manager_log, shell=True)
-
+    # cmd_get_task_manager_log = "kubectl cp flink-benchmark-taskmanager-1-1:/opt/flink/log/ ./logs/"
+    # subprocess.run(cmd_get_task_manager_log, shell=True)
+    # cmd_stop_flink_cluster = "kubectl delete -f  ../k8s-configs/flink-session-cluster.yaml"
+    # subprocess.run(cmd_stop_flink_cluster, shell=True)
+    #
+    # cmd_stop_flink_job = "kubectl delete -f  ../k8s-configs/flink-session-job.yaml"
+    # subprocess.run(cmd_stop_flink_job, shell=True)
     cmd_stop_flink_job = "kubectl delete -f  ../k8s-configs/benchmark-table-job.yaml"
     subprocess.run(cmd_stop_flink_job, shell=True)
 
@@ -70,6 +74,11 @@ for cmd in image_build_commands:
 #start flink job
 cmd_apply_config = "kubectl apply -f ../k8s-configs/benchmark-config.yaml"
 subprocess.run(cmd_apply_config, shell=True, check=True)
+# cmd_start_flink_cluster = "kubectl apply -f ../k8s-configs/flink-session-cluster.yaml"
+# subprocess.run(cmd_start_flink_cluster, shell=True, check=True)
+# cmd_start_flink_job = "kubectl apply -f ../k8s-configs/flink-session-job.yaml"
+# subprocess.run(cmd_start_flink_job, shell=True, check=True)
+
 cmd_start_flink_job = "kubectl apply -f ../k8s-configs/benchmark-table-job.yaml"
 subprocess.run(cmd_start_flink_job, shell=True, check=True)
 

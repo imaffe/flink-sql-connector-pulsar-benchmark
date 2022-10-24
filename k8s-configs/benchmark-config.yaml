@@ -7,6 +7,6 @@ data:
         test.type=table
         test.schema=string
         test.semantic=exactly-one
-        test.parallelism=4
+        test.parallelism=2
         test.partitions=4
         test.subscription-mode=Exclusive
